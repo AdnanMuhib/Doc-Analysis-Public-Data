@@ -18,8 +18,8 @@ import traceback
 import sys
 from PIL import Image, ImageDraw
 
-######### calculate accuracy #############
-
+##############################################################################################
+######### calculate accuracy of the detection #############
 def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file):
     Img  = Image.open(img)
     gray_img = Img.convert('L')
@@ -116,9 +116,10 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file):
         fo.write("\r\n" + str(accuracy))
 
     fo.close()
-##########################################
+############## End of Function ###############################################################
 
-######### Function to remove extra table #############
+##############################################################################################
+######### Function to remove extra table 
 def remove_wrong_table(table_coords):
     max_area_table_index = 0
     areas = []
@@ -137,9 +138,10 @@ def remove_wrong_table(table_coords):
     final_table[1] = table_coords[min_y_0_table_index][1] 
     final_table[3] = table_coords[max_y_1_table_index][3]
     return final_table
+############## End of Function ###############################################################
 
-
-######### Function to extract table_words extract #############
+##############################################################################################
+######### Function to extract table_words extract 
 def extract_table_words(write_path, name_of_file, table_coord, arr, ar):
     # calculating avg distance between detected columns
     distance = []
@@ -148,7 +150,7 @@ def extract_table_words(write_path, name_of_file, table_coord, arr, ar):
         distance.append(ar[i+1] - ar[i])
     if(len(distance) > 0):
         avg_distance = reduce(lambda x, y: x + y, distance) / len(distance)
-        #avg_distance = avg_distance/2
+        avg_distance = avg_distance/3
     file = open(write_path + "\\csv\\" + name_of_file + "_table_words.csv", "wb")
     for i in range(len(table_coord)):
         coords = table_coord[i]
@@ -176,12 +178,11 @@ def extract_table_words(write_path, name_of_file, table_coord, arr, ar):
                     file.write (' ' + arr[j].word)
 
     file.close()
+############## End of Function ###############################################################
 
-######################################################### 
 
-######################################################### 
-###### Calculate Y Cut for column detection ######
-
+##############################################################################################
+###### Calculate Y Cut for column detection 
 def calc_y_cut (img , coord, file_path):
     drawImg  = Image.open(img)
     im2 =  drawImg
@@ -232,7 +233,7 @@ def calc_y_cut (img , coord, file_path):
             ycounts = 0
     drawImg.save(file_path)
     return ar
-############## End of Function #################
+############## End of Function ###############################################################
 
 ##############################################################################################
 # Main function for document analysis
@@ -344,6 +345,8 @@ def main(table, img, ocr, name_of_file, arff, out_img, write_path, model_file):
     structure_identification.detect_components(img, cells_arr, write_path + "\\" 
                                                         + name_of_file +
                                                "_struct_identification.png")
+############## End of Function ###############################################################
+
 ##############################################################################################
 # batch processor for running it in loop over all the lements in that directory
 def batch_processor():
@@ -364,10 +367,9 @@ def batch_processor():
         arff = dir_out + "\\" + name_of_file + ".csv_arff.arff"
         out_img = dir_out + "\\" + name_of_file + "_table.png"
         main(table, img, ocr, file_to_write, arff, out_img)
-
     # end of the batch processing
     return
-
+############## End of Function ###############################################################
 
 ##############################################################################################
 # For cross compilation
@@ -381,6 +383,8 @@ def setup_main(path, file_name, write_path, model_file):
     main(table, img, ocr, file_to_write, arff, out_img, write_path, model_file)
     
     return
+############## End of Function ###############################################################
+
 ##############################################################################################
 ### batch Processor new
 import ntpath
@@ -398,7 +402,7 @@ def batch_processor_current():
             setup_main(file_path, name_of_file, write_path, model_file)
             
     return
-
+############## End of Function ###############################################################
 
 
 ##############################################################################################
@@ -407,27 +411,6 @@ if __name__ == "__main__":
     jvm.start()
     batch_processor_current()
     jvm.stop()
-    ##i = raw_input()
-    #path = sys.argv[1]
-    #file_name = sys.argv[2]
-    #write_path = sys.argv[3]
-    #print path
-    #print file_name
-    #print write_path
-    #i = raw_input()
-    #print i
-    #f = open('F:\\KICS - Research Officer\\CVML\\Document Analysis\\WindowsFormsApplication1\\WindowsFormsApplication1\\bin\\Debug\\h.txt', 'w')
-    #f.write(pre_prefix)
-    #f.write("\n")
-    #f.write(prefix)
-    #f.write("\n")
-    #f.write(file_name)
-    #f.write("\n")
-    #f.write(dir)
-    #setup_main(path, file_name, write_path)
-
-
-
 ##############################################################################################
 ########################################END###################################################
 ##############################################################################################
