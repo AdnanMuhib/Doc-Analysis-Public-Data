@@ -20,7 +20,7 @@ from PIL import Image, ImageDraw
 
 ##############################################################################################
 ######### calculate accuracy of the detection #############
-def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file):
+def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_table):
     Img  = Image.open(img)
     gray_img = Img.convert('L')
     bw = gray_img.point(lambda x: 0 if x < 128 else 255, '1')
@@ -29,7 +29,7 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file):
     g_y = Y[0]
     g_x_1 = X_1[0]
     g_y_1 = Y_1[0]
-    d_coords = table_coord[0]
+    d_coords = table_coord
     accuracy = 0
     print("ground truth", g_x,g_y,g_x_1,g_y_1)
     print("detected",d_coords[0],d_coords[1],d_coords[2],d_coords[3])
@@ -44,9 +44,19 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file):
     width = 0
     height = 0
     check = 0
+    if(no_of_table > 1):
+        table_difference = []
+        for i in range(no_of_table):
+            table_difference.append(abs(Y[i] - table_coord[1]))
+        close_table_index = min(xrange(len(table_difference)), key=table_difference.__getitem__)
+        g_x = X[close_table_index]
+        g_y = Y[close_table_index]
+        g_x_1 = X_1[close_table_index]
+        g_y_1 = Y_1[close_table_index]
+        Area = abs(( g_x_1 - g_x ) * ( g_y_1 - g_y))
     if(g_x < d_coords[0] and g_y < d_coords[1] and g_x_1 > d_coords[2] and g_y_1 > d_coords[3]):
-        width = g_x - g_x_1
-        height = g_y - g_y_1
+        width = g_x_1 - g_x
+        height = g_y_1 - g_y
         for x in range(g_x, d_coords[0]):
             for y in range(g_y, g_y_1):
                 if(bw.getpixel((x, y)) == 0):
@@ -59,20 +69,20 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file):
 
         for x in range(g_y, d_coords[1]):
             for y in range(g_x, g_x_1):
-                if(bw.getpixel((x, y)) == 0):
+                if(bw.getpixel((y, x)) == 0):
                     b3 += 1
 
         for x in range(g_y_1, d_coords[3]):
             for y in range(g_x, g_x_1):
-                if(bw.getpixel((x, y)) == 0):
+                if(bw.getpixel((y, x)) == 0):
                     b4 += 1
     else:
         b1 = 0
         b2 = 0
         b3 = 0
         b4 = 0
-        width = d_coords[0] - d_coords[2]
-        height = d_coords[1] - d_coords[3]
+        width = abs(d_coords[0] - d_coords[2])
+        height = abs(d_coords[1] - d_coords[3])
         for x in range(g_x, d_coords[0]):
             for y in range(d_coords[1], d_coords[3]):
                 if(bw.getpixel((x, y)) == 0):
@@ -85,12 +95,12 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file):
 
         for x in range(g_y, d_coords[1]):
             for y in range(d_coords[0], d_coords[2]):
-                if(bw.getpixel((x, y)) == 0):
+                if(bw.getpixel((y, x)) == 0):
                     b3 += 1
 
         for x in range(g_y_1, d_coords[3]):
             for y in range(d_coords[0], d_coords[2]):
-                if(bw.getpixel((x, y)) == 0):
+                if(bw.getpixel((y, x)) == 0):
                     b4 += 1
 
     total_black_pixels = b1 + b2 + b3 + b4
@@ -105,6 +115,8 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file):
         check = 0
     elif(b4 == width and b2 <= 20 and b3 <= 20 and b1 <=20 ):
         check = 0
+    elif(b1 <= 20 and b2 <= 20 and b3 <= 20 and b4 <=20 ):
+        check = 0
     elif(total_black_pixels == 0):
         check = 0
     else:
@@ -112,8 +124,13 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file):
 
     if(check == 1):
         accuracy = float(100 - (float(Area-Area2)/Area) * 100)
+        if(no_of_table > 1):
+            error = 100 / no_of_table
+            accuracy = accuracy - (error * (no_of_table - 1))        
         print("Accuracy : ", accuracy)
-        fo.write("\r\n" + str(accuracy))
+        fo.write("\r\n" + str(accuracy) + "%" + "," + "accurate")
+    else:
+        fo.write("\r\n" + "100%" + "," + "accurate")
 
     fo.close()
 ############## End of Function ###############################################################
@@ -328,10 +345,10 @@ def main(table, img, ocr, name_of_file, arff, out_img, write_path, model_file):
     # call to function of calculating Y cut
     ar = calc_y_cut(img, table_coord_actual, write_path + "\\" + name_of_file + "_column.png")
     
-    calc_accuracy(X, X_1, Y, Y_1, table_coord_actual, img, write_path, name_of_file)
+    calc_accuracy(X, X_1, Y, Y_1, final_table, img, write_path, name_of_file, no_of_table)
     
     # Extracting words of detected table region and writing them to csv
-    extract_table_words(write_path,name_of_file,table_coord_actual,arr_of_objects,ar)
+   # extract_table_words(write_path,name_of_file,table_coord_actual,arr_of_objects,ar)
     
     # Detect words in the table
     cells_arr = structure_identification.detecting_cell(img, s_arr,
@@ -391,7 +408,7 @@ import ntpath
 def batch_processor_current():
     bulk_folder = "F:\\KICS - Research Officer\\Document Analysis\\DATA SET\\Test Data\\Bulk"
     extension = ".png"
-    model_file = "C:\\Users\\Abdullah_A\\Documents\\Visual Studio 2013\\Projects\\Public_Data_Doc_Analysis\\Public_Data_Doc_Analysis\\Model\\Model.model"
+    model_file = "Model\\Model.model"
     write_path = ntpath.expanduser('~\\Documents\\Document Analysis')
     file_path = bulk_folder
     # Get the files in the directory

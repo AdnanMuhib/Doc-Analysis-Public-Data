@@ -33,7 +33,7 @@ class Ui_MainWindow(object):
         file_name = None
         file_path = None
         write_path = None
-        self.model_file = "C:\\Users\\Abdullah_A\\Documents\\Visual Studio 2013\\Projects\\Public_Data_Doc_Analysis\\Public_Data_Doc_Analysis\\Model\\Model.model"
+        self.model_file = "Model\\Model.model"
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
         MainWindow.setWindowModality(QtCore.Qt.WindowModal)
         MainWindow.resize(800, 529)
