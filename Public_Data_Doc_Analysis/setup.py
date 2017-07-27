@@ -55,8 +55,8 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_ta
         g_y_1 = Y_1[close_table_index]
         Area = abs(( g_x_1 - g_x ) * ( g_y_1 - g_y))
     if(g_x < d_coords[0] and g_y < d_coords[1] and g_x_1 > d_coords[2] and g_y_1 > d_coords[3]):
-        width = g_x_1 - g_x
-        height = g_y_1 - g_y
+        width = abs(g_x_1 - g_x)
+        height = abs(g_y_1 - g_y)
         for x in range(g_x, d_coords[0]):
             for y in range(g_y, g_y_1):
                 if(bw.getpixel((x, y)) == 0):
@@ -123,10 +123,10 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_ta
         check = 1
 
     if(check == 1):
-        accuracy = float(100 - (float(Area-Area2)/Area) * 100)
+        accuracy = abs(float(100 - (float(abs(Area-Area2))/Area) * 100))
         if(no_of_table > 1):
             error = 100 / no_of_table
-            accuracy = accuracy - (error * (no_of_table - 1))        
+            accuracy = abs(accuracy - (error * (no_of_table - 1)))        
         print("Accuracy : ", accuracy)
         fo.write("\r\n" + str(accuracy) + "%" + "," + "accurate")
     else:
@@ -205,49 +205,47 @@ def calc_y_cut (img , coord, file_path):
     im2 =  drawImg
     draw = ImageDraw.Draw(drawImg)
     # drawing detected table
-    for i in range(len(coord)):
-        draw.rectangle(coord[i], fill = None, outline = (255, 0 , 0))
+    draw.rectangle(coord, fill = None, outline = (255, 0 , 0))
     # converting to gray
     gray_img = im2.convert('L')
     # converting to Binary Image
     bw = gray_img.point(lambda x: 0 if x < 128 else 255, '1')
-    for i in range(len(coord)):
-        table = coord[i]
+    table = coord
+    ycounts = 0
+    spx = 0
+    spy = 0
+    epx = 0
+    epy = 0
+    y_start = table[1]
+    fpx = 0
+    fpy = 0
+    check = 0
+    white = 0
+    black = 0
+    ar = []
+    thr = (table[2] - table[0]) / 20
+    for x in range(table[0], table[2]):
+        for y in range(table[1], table[3]):
+            if((bw.getpixel((x, y))) == 0):
+                ycounts += 1
+        if(ycounts == 0 or ycounts == 1 or ycounts == 2 or ycounts == 3 ):
+            white += 1
+        if(check == 0):
+            if(ycounts == 0 or ycounts == 1 or ycounts == 2 or ycounts == 3):
+                spx = x
+                check = 1
+        else:
+            if(ycounts > thr ):
+                epx = x
+                epy = table[3]
+                fpx = (spx + epx) / 2
+                if(epx != spx):
+                    if(white > 6):
+                        draw.line((fpx, y_start, fpx, epy), fill =  (255, 0, 0), width = 2)
+                        ar.append(fpx)
+                        check = 0
+                        white = 0
         ycounts = 0
-        spx = 0
-        spy = 0
-        epx = 0
-        epy = 0
-        y_start = table[1]
-        fpx = 0
-        fpy = 0
-        check = 0
-        white = 0
-        black = 0
-        ar = []
-        thr = (table[2] - table[0]) / 20
-        for x in range(table[0], table[2]):
-            for y in range(table[1], table[3]):
-                if((bw.getpixel((x, y))) == 0):
-                    ycounts += 1
-            if(ycounts == 0 or ycounts == 1 or ycounts == 2 or ycounts == 3 ):
-                white += 1
-            if(check == 0):
-                if(ycounts == 0 or ycounts == 1 or ycounts == 2 or ycounts == 3):
-                    spx = x
-                    check = 1
-            else:
-                if(ycounts > thr ):
-                    epx = x
-                    epy = table[3]
-                    fpx = (spx + epx) / 2
-                    if(epx != spx):
-                        if(white > 6):
-                            draw.line((fpx, y_start, fpx, epy), fill =  (255, 0, 0), width = 2)
-                            ar.append(fpx)
-                            check = 0
-                            white = 0
-            ycounts = 0
     drawImg.save(file_path)
     return ar
 ############## End of Function ###############################################################
@@ -343,7 +341,7 @@ def main(table, img, ocr, name_of_file, arff, out_img, write_path, model_file):
     file.close()
 
     # call to function of calculating Y cut
-    ar = calc_y_cut(img, table_coord_actual, write_path + "\\" + name_of_file + "_column.png")
+    ar = calc_y_cut(img, final_table, write_path + "\\" + name_of_file + "_column.png")
     
     calc_accuracy(X, X_1, Y, Y_1, final_table, img, write_path, name_of_file, no_of_table)
     
