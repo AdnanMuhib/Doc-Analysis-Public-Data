@@ -44,7 +44,7 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_ta
     width = 0
     height = 0
     check = 0
-    if(no_of_table > 1):
+    if(no_of_table == 2):
         table_difference = []
         for i in range(no_of_table):
             table_difference.append(abs(Y[i] - table_coord[1]))
@@ -55,8 +55,8 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_ta
         g_y_1 = Y_1[close_table_index]
         Area = abs(( g_x_1 - g_x ) * ( g_y_1 - g_y))
     if(g_x < d_coords[0] and g_y < d_coords[1] and g_x_1 > d_coords[2] and g_y_1 > d_coords[3]):
-        width = abs(g_x_1 - g_x)
-        height = abs(g_y_1 - g_y)
+        width = g_x_1 - g_x
+        height = g_y_1 - g_y
         for x in range(g_x, d_coords[0]):
             for y in range(g_y, g_y_1):
                 if(bw.getpixel((x, y)) == 0):
@@ -123,10 +123,9 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_ta
         check = 1
 
     if(check == 1):
-        accuracy = abs(float(100 - (float(abs(Area-Area2))/Area) * 100))
-        if(no_of_table > 1):
-            error = 100 / no_of_table
-            accuracy = abs(accuracy - (error * (no_of_table - 1)))        
+        accuracy = float(100 - (float(Area-Area2)/Area) * 100)
+        if(no_of_table == 2):
+            accuracy = accuracy - 50        
         print("Accuracy : ", accuracy)
         fo.write("\r\n" + str(accuracy) + "%" + "," + "accurate")
     else:
@@ -157,46 +156,51 @@ def remove_wrong_table(table_coords):
     return final_table
 ############## End of Function ###############################################################
 
-##############################################################################################
-######### Function to extract table_words extract 
-def extract_table_words(write_path, name_of_file, table_coord, arr, ar):
-    # calculating avg distance between detected columns
-    distance = []
-    avg_distance = 15
-    for i in range(len(ar)-1):
-        distance.append(ar[i+1] - ar[i])
-    if(len(distance) > 0):
-        avg_distance = reduce(lambda x, y: x + y, distance) / len(distance)
-        avg_distance = avg_distance/3
-    file = open(write_path + "\\csv\\" + name_of_file + "_table_words.csv", "wb")
-    for i in range(len(table_coord)):
-        coords = table_coord[i]
-        for i in range(len(arr)):
-            if(arr[i].x >= coords[0] and arr[i].y >= coords[1] and arr[i].x <= coords[2] and arr[i].y <= coords[3]):
-                x = arr[i].x
-                x_1 = ( arr[i].x + arr[i].width  ) 
-                X = x - x_1 
+############ Extract Table Words through Html ######################
+
+def extract_table_words(write_path, name_of_file, coords, arr):
+    ar = []
+    for i in range(len(arr)):
+        if(arr[i].x >= coords[0] and arr[i].y >= coords[1] and arr[i].x <= coords[2] and arr[i].y <= coords[3]):
+            ar.append(arr[i].x)
+    min_value = min(ar)
+    left = 30
+    file = open(write_path + "\\html\\" + name_of_file + "_table_words.html", "wb")
+    file.write("<html>\r\n<style>\r\ntable{\r\n border:2px solid black;\r\nwidth:" + 
+    str(abs(coords[2]-coords[0]) + 50) + "px;\r\nheight:" + str(abs(coords[3]-coords[1]) + 50) +
+    "px;}\r\n</style>\r\n<body>\r\n<table>\r\n<tr>\r\n")
     previous_word_y = 0
+    y = 0
+    top = 40
+    t = 0
+    a = 0
+    l = 0
+    b = 0
     bool = 0
-    for i in range(len(table_coord)):
-        table = table_coord[i]
-        for j in range(len(arr)-1):
-            if(arr[j].x >= table[0] and arr[j].y >= table[1] and (arr[j].x) <= table[2] 
-            and (arr[j].y) <= table[3]):
-                if(bool == 0):
-                    previous_word_y = arr[j].y
-                    bool = 1
-                if(arr[j].y != previous_word_y):
-                    file.write ( '\r\n' + arr[j].word )
-                    bool = 0
-                elif((arr[j+1].x - arr[j].x) >= avg_distance):
-                    file.write (',' + arr[j].word)
-                else:
-                    file.write (' ' + arr[j].word)
-
+    for i in range(len(arr)):
+        if(arr[i].x >= coords[0] and arr[i].y >= coords[1] and arr[i].x <= coords[2] and arr[i].y <= coords[3]):
+            if(bool == 0):
+                previous_word_y = arr[i].y
+                bool = 1
+            if(arr[i].y != previous_word_y):
+                top = 40
+                t = abs(arr[i].y - y)
+                a = t + a
+                top = top + a 
+                file.write ('\r\n</tr>\r\n<tr>\r\n')
+                previous_word_y = arr[i].y
+            y = arr[i].y
+            if(arr[i].x == min_value):
+                left = 30
+            else:
+                left = 30
+                l = abs(arr[i].x - min_value)
+                left = left + l
+            file.write ('<td style= "position:absolute; left:' + str(left) + '; top:'+ str(top) + '">' + str(arr[i].word) + "</td> \r\n")
+    file.write("</tr>\r\n</table>\r\n</body>\r\n </html>")
     file.close()
-############## End of Function ###############################################################
 
+################## End of Function ####################################
 
 ##############################################################################################
 ###### Calculate Y Cut for column detection 
@@ -205,47 +209,49 @@ def calc_y_cut (img , coord, file_path):
     im2 =  drawImg
     draw = ImageDraw.Draw(drawImg)
     # drawing detected table
-    draw.rectangle(coord, fill = None, outline = (255, 0 , 0))
+    for i in range(len(coord)):
+        draw.rectangle(coord[i], fill = None, outline = (255, 0 , 0))
     # converting to gray
     gray_img = im2.convert('L')
     # converting to Binary Image
     bw = gray_img.point(lambda x: 0 if x < 128 else 255, '1')
-    table = coord
-    ycounts = 0
-    spx = 0
-    spy = 0
-    epx = 0
-    epy = 0
-    y_start = table[1]
-    fpx = 0
-    fpy = 0
-    check = 0
-    white = 0
-    black = 0
-    ar = []
-    thr = (table[2] - table[0]) / 20
-    for x in range(table[0], table[2]):
-        for y in range(table[1], table[3]):
-            if((bw.getpixel((x, y))) == 0):
-                ycounts += 1
-        if(ycounts == 0 or ycounts == 1 or ycounts == 2 or ycounts == 3 ):
-            white += 1
-        if(check == 0):
-            if(ycounts == 0 or ycounts == 1 or ycounts == 2 or ycounts == 3):
-                spx = x
-                check = 1
-        else:
-            if(ycounts > thr ):
-                epx = x
-                epy = table[3]
-                fpx = (spx + epx) / 2
-                if(epx != spx):
-                    if(white > 6):
-                        draw.line((fpx, y_start, fpx, epy), fill =  (255, 0, 0), width = 2)
-                        ar.append(fpx)
-                        check = 0
-                        white = 0
+    for i in range(len(coord)):
+        table = coord[i]
         ycounts = 0
+        spx = 0
+        spy = 0
+        epx = 0
+        epy = 0
+        y_start = table[1]
+        fpx = 0
+        fpy = 0
+        check = 0
+        white = 0
+        black = 0
+        ar = []
+        thr = (table[2] - table[0]) / 20
+        for x in range(table[0], table[2]):
+            for y in range(table[1], table[3]):
+                if((bw.getpixel((x, y))) == 0):
+                    ycounts += 1
+            if(ycounts == 0 or ycounts == 1 or ycounts == 2 or ycounts == 3 ):
+                white += 1
+            if(check == 0):
+                if(ycounts == 0 or ycounts == 1 or ycounts == 2 or ycounts == 3):
+                    spx = x
+                    check = 1
+            else:
+                if(ycounts > thr ):
+                    epx = x
+                    epy = table[3]
+                    fpx = (spx + epx) / 2
+                    if(epx != spx):
+                        if(white > 6):
+                            draw.line((fpx, y_start, fpx, epy), fill =  (255, 0, 0), width = 2)
+                            ar.append(fpx)
+                            check = 0
+                            white = 0
+            ycounts = 0
     drawImg.save(file_path)
     return ar
 ############## End of Function ###############################################################
@@ -273,7 +279,6 @@ def main(table, img, ocr, name_of_file, arff, out_img, write_path, model_file):
     im = Image.open(img).convert('RGBA')
     draw_image = ImageDraw.Draw(im)
     if(no_of_table!=None):
-        
         for i in range(no_of_table):
             for j in range(3):
                 draw_image.rectangle([X[i]+j, Y[i]+j,  X_1[i] + j, Y_1[i] + j], fill=None, outline=(0, 255, 0))
@@ -346,7 +351,7 @@ def main(table, img, ocr, name_of_file, arff, out_img, write_path, model_file):
     calc_accuracy(X, X_1, Y, Y_1, final_table, img, write_path, name_of_file, no_of_table)
     
     # Extracting words of detected table region and writing them to csv
-   # extract_table_words(write_path,name_of_file,table_coord_actual,arr_of_objects,ar)
+    extract_table_words(write_path,name_of_file,final_table,arr_of_objects)
     
     # Detect words in the table
     cells_arr = structure_identification.detecting_cell(img, s_arr,
