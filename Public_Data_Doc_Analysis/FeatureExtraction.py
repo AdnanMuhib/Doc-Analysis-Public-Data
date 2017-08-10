@@ -30,6 +30,7 @@ class FeatureExtraction(object):
         for i in range(0, len(X)):
             if ((X[i] <= x <= X_1[i]) and (Y[i] <= y <= Y_1[i])):
                 table = 1
+                break
             else: table = 0
         return table
 

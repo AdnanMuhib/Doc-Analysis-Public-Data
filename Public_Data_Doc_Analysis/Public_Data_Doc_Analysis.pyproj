@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>a8c298e2-c280-4d21-b44f-bac9f7c9f62d</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>GUI.py</StartupFile>
+    <StartupFile>setup.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -27,15 +27,15 @@
   <ItemGroup>
     <Compile Include="CellDrawing.py" />
     <Compile Include="DataCollector.py" />
-    <Compile Include="DocumentAnalysis_v2.0.py" />
-    <Compile Include="DocumentAnalysis_v2.0_TestingInterface.py" />
     <Compile Include="DocumentParser.py" />
     <Compile Include="FeatureExtraction.py" />
     <Compile Include="GUI.py" />
     <Compile Include="PostProcessor.py" />
     <Compile Include="setup.py" />
     <Compile Include="StructureIdentification.py" />
-    <Compile Include="Table_Recognition.py" />
+    <Compile Include="UTILITIES.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="WekaMachineLearning.py" />
   </ItemGroup>
   <!-- Uncomment the CoreCompile target to enable the Build command in

@@ -129,5 +129,46 @@ class DocumentParser(object):
         return
 
     ###################################################################################
+    # Writing the array of objects to CSV for weka testing-traing purpose or self 
+    # evaluation
+    def write_to_csv_gt(self, arr, name):
+        no_of_words = len(arr)
+        #print("table : prediction")
+        words_in_table = 0
+        words_in_table_dected_non_table = 0
+        words_in_non_table = 0
+        words_in_non_table_detected_table = 0
+        for i in range(0, no_of_words):
+            #print(arr[i].table, ":" ,arr[i].prediction)
+            if (arr[i].table == 1 and arr[i].prediction == 1):
+                words_in_table = words_in_table + 1
+            elif (arr[i].table == 0 and arr[i].prediction == 0):
+                words_in_non_table = words_in_non_table + 1
+            elif (arr[i].table == 1 and arr[i].prediction == 0):
+                words_in_table_dected_non_table = words_in_table_dected_non_table + 1
+            elif (arr[i].table == 0 and arr[i].prediction == 1):
+                words_in_non_table_detected_table = words_in_non_table_detected_table + 1
+            elif (arr[i].prediction == None):
+                if (arr[i].table == 1):
+                    words_in_table = words_in_table + 1
+                elif (arr[i].table == 0):
+                    words_in_non_table = words_in_non_table + 1
+        #print("table : Non Table : wrong Detected Table : wrong Detected Non Table")
+        #print(words_in_table, "   ", words_in_non_table, "   ", words_in_non_table_detected_table, "   ", words_in_table_dected_non_table)
+        _arr = []
+        _arr.append([])
+        _arr[0].append("Table")
+        _arr[0].append("None Table")
+        _arr[0].append("wrong Detected Table")
+        _arr[0].append("wrong Detected Non Table")
+        _arr.append([])
+        _arr[1].append(words_in_table)
+        _arr[1].append(words_in_non_table)
+        _arr[1].append(words_in_non_table_detected_table)
+        _arr[1].append(words_in_table_dected_non_table)
+        self.write_to_csv(_arr, name)
+        return
+
+    ###################################################################################
     ########################################END########################################
     ###################################################################################
