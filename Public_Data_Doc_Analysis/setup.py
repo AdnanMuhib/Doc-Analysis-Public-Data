@@ -117,7 +117,7 @@ def main(table, img, ocr, name_of_file, arff, out_img, write_path, model_file):
     # Extracting words of detected table region and writing them to csv
    # UT.extract_table_words(write_path,name_of_file,final_table,arr_of_objects)
     # cal cal_accuracy function
-    UT.cal_accuracy(final_table, X, X_1, Y, Y_1, arr_of_objects, no_of_table, write_path + "\\" + name_of_file + "_Accuracy.csv")
+    UT.cal_accuracy(final_table, X, X_1, Y, Y_1, arr_of_objects, no_of_table, write_path + "\\" + name_of_file + "_Accuracy.csv",write_path,name_of_file)
     # Call confusion matrix 
     #UT.confusion_matrix(X,X_1,Y,Y_1,final_table,img,write_path,name_of_file,no_of_table,arr_of_objects)
     

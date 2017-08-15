@@ -409,7 +409,9 @@ def calc_y_cut (img , coord, file_path):
 
 ##############################################################################################
 # Calculate Accuracy 
-def cal_accuracy(coords, g_x, g_x_1, g_y, g_y_1, arr, no_of_table, file_path):
+def cal_accuracy(coords, g_x, g_x_1, g_y, g_y_1, arr, no_of_table, file_path,write_path,filename):
+    file1 = open(write_path + "\\" + filename + "_words_g.csv", "wb")
+    file2 = open(write_path + "\\" + filename + "_words_d.csv", "wb")
     if((no_of_table >= 1 and len(coords) == 0) or (no_of_table == 0 and len(coords) >= 1)):
         print(" accuracy : ", 0)
         file = open(file_path, 'wb')
@@ -428,6 +430,7 @@ def cal_accuracy(coords, g_x, g_x_1, g_y, g_y_1, arr, no_of_table, file_path):
     for i in range(no_of_table):
         for j in range(len(arr)):
             if(arr[j].x >= g_x[i] and arr[j].y >= g_y[i] and arr[j].x <= g_x_1[i] and arr[j].y <= g_y_1[i]):
+                file1.write(str(arr[j].word )+ "\r\n")
                 c += 1
         g_c.append(c)
         c = 0
@@ -436,14 +439,12 @@ def cal_accuracy(coords, g_x, g_x_1, g_y, g_y_1, arr, no_of_table, file_path):
         t_coords = coords[i]
         for j in range(len(arr)):
             if(arr[j].x >= t_coords[0] and arr[j].y >= t_coords[1] and arr[j].x <= t_coords[2] and arr[j].y <= t_coords[3]):
-              c += 1
+                file2.write(str(arr[j].word )+ "\r\n")
+                c += 1
         t_c.append(c)
         c = 0
     accuracy = []
-    if((no_of_table > 1 and len(coords) == 0) or (no_of_table == 0 and len(coords) > 1)):
-        accuracy.append(0)
-    if(no_of_table ==  0 and len(coords) == 0):
-        accuracy.append(100)
+    
     if(no_of_table > 1 and len(coords) > 1):
         if(no_of_table <= len(coords)):
             table_difference = []
@@ -492,9 +493,12 @@ def cal_accuracy(coords, g_x, g_x_1, g_y, g_y_1, arr, no_of_table, file_path):
                     if(no_of_table > 1 and i < (no_of_table - 1)):
                         dist = abs(g_y_1[i] - g_y[i+1])
                         dist_x = abs(g_x[i+1] - g_x_1[i])
-                    if(dist <= 400 or dist_x <= 250):
+                    if(dist <= 250 or dist_x <= 250):
                         counter += g_c[i]
-                mean_accuracy = abs(100 - (float(float(abs(counter - t_c[0])) / counter) * 100))
+                if(counter > t_c[0]):
+                    mean_accuracy = abs(100 - (float(float(abs(counter - t_c[0])) / counter) * 100))
+                else:
+                    mean_accuracy = abs(100 - (float(float(abs(counter - t_c[0])) / t_c[0]) * 100))
         else:
             mean_accuracy = abs(mean_accuracy - ((no_of_table - len(coords)) * float(100 / no_of_table)))
     elif(no_of_table < len(coords)):
@@ -503,6 +507,8 @@ def cal_accuracy(coords, g_x, g_x_1, g_y, g_y_1, arr, no_of_table, file_path):
     file = open(file_path, 'wb')
     file.write(str(mean_accuracy))
     file.close()
+    file2.close()
+    file1.close()
     ############## End of Function ###############################################################
 
 
