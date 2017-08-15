@@ -282,25 +282,12 @@ def remove_wrong_table(table_coords):
         tables = table_coords[i]
         new_table_coords.append(tables)
 
-        #else:
-        #    new_table_coords.append(table)
-    #    y_0.append(table[1])
-    #    y_1.append(table[3])
-    #    area = ((table[2] - table[0]) * (table[3] - table[1]))
-    #    areas.append(area)
-    #max_area_table_index = max(xrange(len(areas)), key=areas.__getitem__)
-    #min_y_0_table_index = min(xrange(len(y_0)), key=y_0.__getitem__)
-    #max_y_1_table_index = max(xrange(len(y_1)), key=y_1.__getitem__)
-    #final_table = table_coords[max_area_table_index]
-    #final_table[1] = table_coords[min_y_0_table_index][1] 
-    #final_table[3] = table_coords[max_y_1_table_index][3]
-    #return final_table
-    
+      
     if(flag == False):
         for i in range(len(table_coords)):
             tab = table_coords[i]
-            tab[0] -= 50
-            tab[2] += 50
+            #tab[0] -= 50
+            #tab[2] += 50
             table_coords[i] = tab
         return table_coords, flag
     return new_table_coords, flag
@@ -510,6 +497,362 @@ def cal_accuracy(coords, g_x, g_x_1, g_y, g_y_1, arr, no_of_table, file_path,wri
     file2.close()
     file1.close()
     ############## End of Function ###############################################################
+
+
+
+    #### cal accuracy ######
+
+def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_table,arr):
+    Img  = Image.open(img)
+    gray_img = Img.convert('L')
+    bw = gray_img.point(lambda x: 0 if x < 128 else 255, '1')
+    file = open( path + "\\csv\\" + name_of_file + "_table_accur.csv", "wb")
+    accuracy = 0
+    a = 0
+    mean_accuracy = 0
+    total_accur = 0
+    if((no_of_table >= 1 and len(table_coord) == 0) or (no_of_table == 0 and len(table_coord) >= 1)):
+        print(" accuracy : ", 0)
+        file = open(path + "\\csv\\" + name_of_file + "_table_accur.csv", "wb")
+        file.write(str(0))
+        file.close()
+        return
+    if(no_of_table ==  0 and len(table_coord) == 0):
+        print(" accuracy : ", 100)
+        file = open(path + "\\csv\\" + name_of_file + "_table_accur.csv", "wb")
+        file.write(str(100))
+        file.close()
+        return
+    g_c = []
+    t_c = []
+    c = 0
+    for i in range(no_of_table):
+        for j in range(len(arr)):
+            if(arr[j].x >= X[i] and arr[j].y >= Y[i] and arr[j].x <= X_1[i] and arr[j].y <= Y_1[i]):
+                c += 1
+        g_c.append(c)
+        c = 0
+    c = 0
+    for i in range(len(table_coord)):
+        t_coords = table_coord[i]
+        for j in range(len(arr)):
+            if(arr[j].x >= t_coords[0] and arr[j].y >= t_coords[1] and arr[j].x <= t_coords[2] and arr[j].y <= t_coords[3]):
+                c += 1
+        t_c.append(c)
+        c = 0
+
+    if(no_of_table >= 1 and len(table_coord) >= 1):
+        if(no_of_table <= len(table_coord)):
+            table_difference = []
+            for i in range(no_of_table):
+                for j in range(len(table_coord)):
+                    table_difference.append(abs(Y[i] - table_coord[j][1]))
+                close_table_index = min(xrange(len(table_difference)), key=table_difference.__getitem__)
+                table_difference = []
+                if(g_c[i] == t_c[close_table_index]):
+                    accuracy = 100
+                    total_accur = accuracy + total_accur
+                    a += 1
+                else:
+                    Area = abs(( X[i] - X_1[i] ) * ( Y_1[i] - Y[i]))
+                    Area2 = abs(( table_coord[close_table_index][2] - table_coord[close_table_index][0] ) * ( table_coord[close_table_index][3] - table_coord[close_table_index][1] ))
+                    print("Area 1 : ",Area, "Area 2 : ", Area2)
+                    b1 = 0
+                    b2 = 0
+                    b3 = 0
+                    b4 = 0
+                    total_black_pixels = 0
+                    width = 0
+                    height = 0
+                    check = 0
+                    if(X[i] < table_coord[close_table_index][0] and Y[i] < table_coord[close_table_index][1] and X_1[i] > table_coord[close_table_index][2] and Y_1[i] > table_coord[close_table_index][3]):
+                        width = abs(X[i] - X_1[i])
+                        height = abs(Y_1[i] - Y[i])
+                        for x in range(X[i], table_coord[close_table_index][0]):
+                            for y in range(Y[i], Y_1[i]):
+                                if(bw.getpixel((x, y)) == 0):
+                                    b1 += 1
+                        for x in range(X_1[i], table_coord[close_table_index][2]):
+                            for y in range(Y[i], Y_1[i]):
+                                if(bw.getpixel((x, y)) == 0):
+                                    b2 += 1
+                        for x in range(Y[i], table_coord[close_table_index][1]):
+                            for y in range(X[i], X_1[i]):
+                                if(bw.getpixel((y, x)) == 0):
+                                    b3 += 1
+                        for x in range(Y_1[i], table_coord[close_table_index][3]):
+                            for y in range(X[i], X_1[i]):
+                                if(bw.getpixel((y, x)) == 0):
+                                    b4 += 1
+                    else:
+                        b1 = 0
+                        b2 = 0
+                        b3 = 0
+                        b4 = 0
+                        width = abs(table_coord[close_table_index][0] - table_coord[close_table_index][2])
+                        height = abs(table_coord[close_table_index][1] - table_coord[close_table_index][3])
+                        for x in range(X[i], table_coord[close_table_index][0]):
+                            for y in range(table_coord[close_table_index][1], table_coord[close_table_index][3]):
+                                if(bw.getpixel((x, y)) == 0):
+                                    b1 += 1
+
+                        for x in range(X_1[i], table_coord[close_table_index][2]):
+                            for y in range(table_coord[close_table_index][1], table_coord[close_table_index][3]):
+                                if(bw.getpixel((x, y)) == 0):
+                                    b2 += 1
+
+                        for x in range(Y[i], table_coord[close_table_index][1]):
+                            for y in range(table_coord[close_table_index][0], table_coord[close_table_index][2]):
+                                if(bw.getpixel((y, x)) == 0):
+                                    b3 += 1
+
+                        for x in range(Y_1[i], table_coord[close_table_index][3]):
+                            for y in range(table_coord[close_table_index][0], table_coord[close_table_index][2]):
+                                if(bw.getpixel((y, x)) == 0):
+                                    b4 += 1
+
+                    total_black_pixels = b1 + b2 + b3 + b4
+
+                    if(b1 == height and b2 == height and b3 == width and b4 == width):
+                        check = 0
+                    elif(b1 == height and b2 <= 20 and b3 <= 20 and b4 <=20 ):
+                        check = 0
+                    elif(b2 == height and b1 <= 20 and b3 <= 20 and b4 <=20 ):
+                        check = 0
+                    elif(b3 == width and b2 <= 20 and b1 <= 20 and b4 <=20 ):
+                        check = 0
+                    elif(b4 == width and b2 <= 20 and b3 <= 20 and b1 <=20 ):
+                        check = 0
+                    elif(b1 <= 20 and b2 <= 20 and b3 <= 20 and b4 <=20 ):
+                        check = 0
+                    elif(total_black_pixels == 0):
+                        check = 0
+                    else:
+                        check = 1
+
+                    if(check == 1):
+                        if(Area >= Area2):
+                            accuracy = abs(float(100 - (float(abs(Area-Area2))/Area) * 100))
+                        else:
+                            accuracy = abs(float(100 - (float(abs(Area-Area2))/Area2) * 100))
+                        a += 1
+                    else:
+                        accuracy = 100
+                        a += 1
+
+                    total_accur = accuracy + total_accur
+        if(no_of_table > len(table_coord)):
+            if(len(table_coord) == 1):
+                counter = 0
+                total_Area = 0
+                dist = 0
+                dist_x = 0
+                for i in range(no_of_table):
+                    if(no_of_table > 1 and i < (no_of_table - 1)):
+                        dist = abs(Y[i] - Y[i+1])
+                        dist_x = abs(X[i+1] - X[i])
+                    if(dist <= 250 or dist_x <= 250):
+                        counter += g_c[i]
+                        Area = abs(( X[i] - X_1[i] ) * ( Y_1[i] - Y[i]))
+                        print("check area",Area)
+                        total_Area = Area + total_Area
+                if(t_c[0] == counter):
+                    accuracy = 100
+                    a += 1
+                    total_accur = accuracy + total_accur
+                else:
+                    Area2 = abs(( table_coord[0][2] - table_coord[0][0] ) * ( table_coord[0][3] - table_coord[0][1] ))
+                    print("Area 1 : ",Area, "Area 2 : ", Area2)
+                    b1 = 0
+                    b2 = 0
+                    b3 = 0
+                    b4 = 0
+                    total_black_pixels = 0
+                    width = 0
+                    height = 0
+                    check = 0
+                    if(X[0] < table_coord[0][0] and Y[0] < table_coord[0][1] and X_1[no_of_table-1] > table_coord[0][2] and Y_1[no_of_table-1] > table_coord[0][3]):
+                        width = abs(table_coord[0][0] - table_coord[0][2])
+                        height = abs(table_coord[0][1] - table_coord[0][3])
+                        for x in range(X[0], table_coord[0][0]):
+                            for y in range(Y[0], Y_1[no_of_table-1]):
+                                if(bw.getpixel((x, y)) == 0):
+                                    b1 += 1
+                        for x in range(X_1[no_of_table-1], table_coord[0][2]):
+                            for y in range(Y[0], Y_1[no_of_table-1]):
+                                if(bw.getpixel((x, y)) == 0):
+                                    b2 += 1
+                        for x in range(Y[0], table_coord[0][1]):
+                            for y in range(X[0], X_1[no_of_table-1]):
+                                if(bw.getpixel((y, x)) == 0):
+                                    b3 += 1
+                        for x in range(Y_1[no_of_table-1], table_coord[0][3]):
+                            for y in range(X[0], X_1[no_of_table-1]):
+                                if(bw.getpixel((y, x)) == 0):
+                                    b4 += 1
+                    else:
+                        b1 = 0
+                        b2 = 0
+                        b3 = 0
+                        b4 = 0
+                        width = abs(table_coord[0][0] - table_coord[0][2])
+                        height = abs(table_coord[0][1] - table_coord[0][3])
+                        for x in range(X[0], table_coord[0][0]):
+                            for y in range(table_coord[0][1], table_coord[0][3]):
+                                if(bw.getpixel((x, y)) == 0):
+                                    b1 += 1
+
+                        for x in range(X_1[no_of_table-1], table_coord[0][2]):
+                            for y in range(table_coord[0][1], table_coord[0][3]):
+                                if(bw.getpixel((x, y)) == 0):
+                                    b2 += 1
+
+                        for x in range(Y[0], table_coord[0][1]):
+                            for y in range(table_coord[0][0], table_coord[0][2]):
+                                if(bw.getpixel((y, x)) == 0):
+                                    b3 += 1
+
+                        for x in range(Y_1[no_of_table-1], table_coord[0][3]):
+                            for y in range(table_coord[0][0], table_coord[0][2]):
+                                if(bw.getpixel((y, x)) == 0):
+                                    b4 += 1
+
+                    total_black_pixels = b1 + b2 + b3 + b4
+
+                    if(b1 == height and b2 == height and b3 == width and b4 == width):
+                        check = 0
+                    elif(b1 == height and b2 <= 20 and b3 <= 20 and b4 <=20 ):
+                        check = 0   
+                    elif(b2 == height and b1 <= 20 and b3 <= 20 and b4 <=20 ):
+                        check = 0
+                    elif(b3 == width and b2 <= 20 and b1 <= 20 and b4 <=20 ):
+                        check = 0
+                    elif(b4 == width and b2 <= 20 and b3 <= 20 and b1 <=20 ):
+                        check = 0
+                    elif(b1 <= 20 and b2 <= 20 and b3 <= 20 and b4 <=20 ):
+                        check = 0
+                    elif(total_black_pixels == 0):
+                        check = 0
+                    else:
+                        check = 1
+
+                    if(check == 1):
+                        if(Area >= total_Area):
+                            accuracy = abs(float(100 - (float(abs(total_Area-Area2))/total_Area) * 100))
+                        else:
+                            accuracy = abs(float(100 - (float(abs(total_Area-Area2))/Area2) * 100))
+                        a += 1
+                    else:
+                        accuracy = 100 
+                        a += 1
+
+                    total_accur = accuracy + total_accur
+            else:        
+                table_difference = []
+                for i in range(len(table_coord)):
+                    for j in range(no_of_table):
+                        table_difference.append(abs(Y[j] - table_coord[i][1]))
+                    close_table_index = min(xrange(len(table_difference)), key=table_difference.__getitem__)
+                    table_difference = []
+                    if(g_c[close_table_index] == t_c[i]):
+                        accuracy = 100
+                        total_accur = accuracy + total_accur
+                        a += 1
+                    else:
+                        Area = abs(( X[close_table_index] - X_1[close_table_index] ) * ( Y_1[close_table_index] - Y[close_table_index]))
+                        Area2 = abs(( table_coord[i][2] - table_coord[i][0] ) * ( table_coord[i][3] - table_coord[i][1] ))
+                        print("Area 1 : ",Area, "Area 2 : ", Area2)
+                        b1 = 0
+                        b2 = 0
+                        b3 = 0
+                        b4 = 0
+                        total_black_pixels = 0
+                        width = 0
+                        height = 0
+                        check = 0
+                        if(X[close_table_index] < table_coord[i][0] and Y[close_table_index] < table_coord[i][1] and X_1[close_table_index] > table_coord[i][2] and Y_1[close_table_index] > table_coord[i][3]):
+                            width = abs(X[close_table_index] - X_1[close_table_index])
+                            height = abs(Y_1[close_table_index] - Y[close_table_index])
+                            for x in range(X[close_table_index], table_coord[i][0]):
+                                for y in range(Y[close_table_index], Y_1[close_table_index]):
+                                    if(bw.getpixel((x, y)) == 0):
+                                        b1 += 1
+                            for x in range(X_1[close_table_index], table_coord[i][2]):
+                                for y in range(Y[close_table_index], Y_1[close_table_index]):
+                                    if(bw.getpixel((x, y)) == 0):
+                                        b2 += 1
+                            for x in range(Y[close_table_index], table_coord[i][1]):
+                                for y in range(X[close_table_index], X_1[close_table_index]):
+                                    if(bw.getpixel((y, x)) == 0):
+                                        b3 += 1
+                            for x in range(Y_1[close_table_index], table_coord[i][3]):
+                                for y in range(X[close_table_index], X_1[close_table_index]):
+                                    if(bw.getpixel((y, x)) == 0):
+                                        b4 += 1
+                        else:
+                            b1 = 0
+                            b2 = 0
+                            b3 = 0
+                            b4 = 0
+                            width = abs(table_coord[i][0] - table_coord[i][2])
+                            height = abs(table_coord[i][1] - table_coord[i][3])
+                            for x in range(X[close_table_index], table_coord[i][0]):
+                                for y in range(table_coord[i][1], table_coord[i][3]):
+                                    if(bw.getpixel((x, y)) == 0):
+                                        b1 += 1
+
+                            for x in range(X_1[close_table_index], table_coord[i][2]):
+                                for y in range(table_coord[i][1], table_coord[i][3]):
+                                    if(bw.getpixel((x, y)) == 0):
+                                        b2 += 1
+
+                            for x in range(Y[close_table_index], table_coord[i][1]):
+                                for y in range(table_coord[i][0], table_coord[i][2]):
+                                    if(bw.getpixel((y, x)) == 0):
+                                        b3 += 1
+
+                            for x in range(Y_1[close_table_index], table_coord[i][3]):
+                                for y in range(table_coord[i][0], table_coord[i][2]):
+                                    if(bw.getpixel((y, x)) == 0):
+                                        b4 += 1
+
+                        total_black_pixels = b1 + b2 + b3 + b4
+
+                        if(b1 == height and b2 == height and b3 == width and b4 == width):
+                            check = 0
+                        elif(b1 == height and b2 <= 20 and b3 <= 20 and b4 <=20 ):
+                            check = 0   
+                        elif(b2 == height and b1 <= 20 and b3 <= 20 and b4 <=20 ):
+                            check = 0
+                        elif(b3 == width and b2 <= 20 and b1 <= 20 and b4 <=20 ):
+                            check = 0
+                        elif(b4 == width and b2 <= 20 and b3 <= 20 and b1 <=20 ):
+                            check = 0
+                        elif(b1 <= 20 and b2 <= 20 and b3 <= 20 and b4 <=20 ):
+                            check = 0
+                        elif(total_black_pixels == 0):
+                            check = 0
+                        else:
+                            check = 1
+
+                        if(check == 1):
+                            if(Area > Area2):
+                                accuracy = abs(float(100 - (float(abs(Area-Area2))/Area) * 100))
+                            else:
+                                accuracy = abs(float(100 - (float(abs(Area-Area2))/Area2) * 100))
+                            a += 1
+                        else:
+                            accuracy = 100 
+                            a += 1
+
+                        total_accur = accuracy + total_accur           
+
+  
+    mean_accuracy = total_accur / a
+    print("accuracy", mean_accuracy)
+    file.write("\r\n" + str(mean_accuracy) + "%" + "," + "accurate")
+    file.close()
+############## End of Function ###############################################################
 
 
 
