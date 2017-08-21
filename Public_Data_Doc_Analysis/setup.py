@@ -63,6 +63,8 @@ def main(table, img, ocr, name_of_file, arff, out_img, write_path, model_file):
     # Adding prediction to the array for further easy use
     p_arr = post_processor.prediction_to_array(dist_calculted_arr, prediction)
     # Output look before applying the ground truth
+    # Writing CSV for cross checking the training result before ground truth
+    document_parser.write_to_csv_gt(p_arr, write_path+ "\\" + name_of_file + "_csv_before")
     #cell_drawing.draw_prediction(p_arr, img, write_path + "\\" + name_of_file + "_before")
     # Applying ground truth
     n_arr = post_processor.ground_truth_x(p_arr, prediction)
@@ -121,7 +123,7 @@ def main(table, img, ocr, name_of_file, arff, out_img, write_path, model_file):
     # Call confusion matrix 
     #UT.confusion_matrix(X,X_1,Y,Y_1,final_table,img,write_path,name_of_file,no_of_table,arr_of_objects)
     # cal cal_accuracy function
-    UT.calc_accuracy(X, X_1, Y, Y_1, final_table,  img, write_path , name_of_file , no_of_table, arr_of_objects)
+    #UT.calc_accuracy(X, X_1, Y, Y_1, final_table,  img, write_path , name_of_file , no_of_table, arr_of_objects)
     # Detect words in the table
     #cells_arr = structure_identification.detecting_cell(img, s_arr,
     #                                                    write_path + "\\" 
@@ -135,7 +137,6 @@ def main(table, img, ocr, name_of_file, arff, out_img, write_path, model_file):
     #                                                    + name_of_file +
     #                                           "_struct_identification.png")
     # Writing the objects to csv for use it for training
-    #Writing CSV for cross checking the training result after enhancement in ground truth
     #document_parser.write_to_csv_gt(p_arr, write_path+ "\\" + name_of_file + "_csv_after")
     #document_parser.write_to_csv(array_of_objects, write_path + "\\" + name_of_file)
 ############## End of Function ###############################################################

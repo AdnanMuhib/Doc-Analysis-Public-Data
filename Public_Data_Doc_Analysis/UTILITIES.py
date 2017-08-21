@@ -397,8 +397,6 @@ def calc_y_cut (img , coord, file_path):
 ##############################################################################################
 # Calculate Accuracy 
 def cal_accuracy(coords, g_x, g_x_1, g_y, g_y_1, arr, no_of_table, file_path,write_path,filename):
-    file1 = open(write_path + "\\" + filename + "_words_g.csv", "wb")
-    file2 = open(write_path + "\\" + filename + "_words_d.csv", "wb")
     if((no_of_table >= 1 and len(coords) == 0) or (no_of_table == 0 and len(coords) >= 1)):
         print(" accuracy : ", 0)
         file = open(file_path, 'wb')
@@ -417,7 +415,6 @@ def cal_accuracy(coords, g_x, g_x_1, g_y, g_y_1, arr, no_of_table, file_path,wri
     for i in range(no_of_table):
         for j in range(len(arr)):
             if(arr[j].x >= g_x[i] and arr[j].y >= g_y[i] and arr[j].x <= g_x_1[i] and arr[j].y <= g_y_1[i]):
-                file1.write(str(arr[j].word )+ "\r\n")
                 c += 1
         g_c.append(c)
         c = 0
@@ -426,7 +423,6 @@ def cal_accuracy(coords, g_x, g_x_1, g_y, g_y_1, arr, no_of_table, file_path,wri
         t_coords = coords[i]
         for j in range(len(arr)):
             if(arr[j].x >= t_coords[0] and arr[j].y >= t_coords[1] and arr[j].x <= t_coords[2] and arr[j].y <= t_coords[3]):
-                file2.write(str(arr[j].word )+ "\r\n")
                 c += 1
         t_c.append(c)
         c = 0
@@ -494,67 +490,100 @@ def cal_accuracy(coords, g_x, g_x_1, g_y, g_y_1, arr, no_of_table, file_path,wri
     file = open(file_path, 'wb')
     file.write(str(mean_accuracy))
     file.close()
-    file2.close()
-    file1.close()
     ############## End of Function ###############################################################
 
-
-
-    #### cal accuracy ######
+############## cal accuracy ######################################################################
 
 def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_table,arr):
+    # open image from img path
     Img  = Image.open(img)
+    # image change in gray image
     gray_img = Img.convert('L')
+    # gray image change in black and white image
     bw = gray_img.point(lambda x: 0 if x < 128 else 255, '1')
+    # file open where accuracy write
     file = open( path + "\\csv\\" + name_of_file + "_table_accur.csv", "wb")
     accuracy = 0
     a = 0
     mean_accuracy = 0
     total_accur = 0
+    # check no_of_table(ground truth tables) greater than 1 while detected is zero or
+    #  ground truth is zero while detected greater than 1 accuracy is zero
     if((no_of_table >= 1 and len(table_coord) == 0) or (no_of_table == 0 and len(table_coord) >= 1)):
         print(" accuracy : ", 0)
         file = open(path + "\\csv\\" + name_of_file + "_table_accur.csv", "wb")
         file.write(str(0))
         file.close()
         return
+    #  check ground truth table is zero and detected is also zero then accuracy is 100 percent 
     if(no_of_table ==  0 and len(table_coord) == 0):
         print(" accuracy : ", 100)
         file = open(path + "\\csv\\" + name_of_file + "_table_accur.csv", "wb")
         file.write(str(100))
         file.close()
         return
+    # array to store the number of words in ground truth tables
     g_c = []
+    # array to store the number of words in detected tables
     t_c = []
+    # counter for words 
     c = 0
+    # count number of words of ground truth tables 
     for i in range(no_of_table):
         for j in range(len(arr)):
+            # if word x position greater or equal ground truth table x position and less or equal ground truth x_1 position
+            # and word y position greater or equal ground truth table y position and less or equal ground truth y_1 position
+            # then the word exist in this table 
             if(arr[j].x >= X[i] and arr[j].y >= Y[i] and arr[j].x <= X_1[i] and arr[j].y <= Y_1[i]):
+                # count words
                 c += 1
+        # append each words counter in array
         g_c.append(c)
         c = 0
     c = 0
+    # count number of words of detected tables
     for i in range(len(table_coord)):
+        # get single table 
         t_coords = table_coord[i]
         for j in range(len(arr)):
+            # if word x position greater or equal detected table x position and less or equal detected x_1 position
+            # and word y position greater or equal detected table y position and less or equal detected y_1 position
+            # then the word exist in this table 
             if(arr[j].x >= t_coords[0] and arr[j].y >= t_coords[1] and arr[j].x <= t_coords[2] and arr[j].y <= t_coords[3]):
+                # count words
                 c += 1
+        # append each words counter in array
         t_c.append(c)
         c = 0
 
+    # if ground truth tables and also detected tables greater than 1
     if(no_of_table >= 1 and len(table_coord) >= 1):
+        # if ground truth tables is less than detected 
         if(no_of_table <= len(table_coord)):
+            # array to store the distance from every detected table
+            # to check the close table with ground truth table
             table_difference = []
+            # loop to calculate the difference and append to array of table_difference
             for i in range(no_of_table):
                 for j in range(len(table_coord)):
                     table_difference.append(abs(Y[i] - table_coord[j][1]))
+                # getting the index of close table by getting the index of minimum difference value
                 close_table_index = min(xrange(len(table_difference)), key=table_difference.__getitem__)
                 table_difference = []
+                # if number of gorund truth words is equal to number of detected words 
+                # then accuracy is 100 percent 
                 if(g_c[i] == t_c[close_table_index]):
                     accuracy = 100
+                    # store total accuracy
                     total_accur = accuracy + total_accur
+                    # count table for mean accuracy
                     a += 1
+                # if number of gorund truth words is not equal to number of detected words
+                # then apply xy-cut in else
                 else:
+                    # calculate area of ground truth
                     Area = abs(( X[i] - X_1[i] ) * ( Y_1[i] - Y[i]))
+                    # calculate area of detected which is near to ground truth
                     Area2 = abs(( table_coord[close_table_index][2] - table_coord[close_table_index][0] ) * ( table_coord[close_table_index][3] - table_coord[close_table_index][1] ))
                     print("Area 1 : ",Area, "Area 2 : ", Area2)
                     b1 = 0
@@ -565,21 +594,30 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_ta
                     width = 0
                     height = 0
                     check = 0
+                    # if ground truth x and y position less or equal to detected x and y position 
+                    # and ground truth x_1 and y_1 position greater or equal to detected x_1 and y_1 psoition
+                    # its mean detected table is in ground truth table
                     if(X[i] < table_coord[close_table_index][0] and Y[i] < table_coord[close_table_index][1] and X_1[i] > table_coord[close_table_index][2] and Y_1[i] > table_coord[close_table_index][3]):
+                       # get gorund truth table width
                         width = abs(X[i] - X_1[i])
+                        # get gorund truth table height
                         height = abs(Y_1[i] - Y[i])
+                        # count black pixels in left area of table
                         for x in range(X[i], table_coord[close_table_index][0]):
                             for y in range(Y[i], Y_1[i]):
                                 if(bw.getpixel((x, y)) == 0):
                                     b1 += 1
+                        # count black pixels in right area of table
                         for x in range(X_1[i], table_coord[close_table_index][2]):
                             for y in range(Y[i], Y_1[i]):
                                 if(bw.getpixel((x, y)) == 0):
                                     b2 += 1
+                        # count black pixels in upper area of table
                         for x in range(Y[i], table_coord[close_table_index][1]):
                             for y in range(X[i], X_1[i]):
                                 if(bw.getpixel((y, x)) == 0):
                                     b3 += 1
+                        # count black pixels in bottom area of table
                         for x in range(Y_1[i], table_coord[close_table_index][3]):
                             for y in range(X[i], X_1[i]):
                                 if(bw.getpixel((y, x)) == 0):
@@ -589,78 +627,108 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_ta
                         b2 = 0
                         b3 = 0
                         b4 = 0
+                         # get detected table width
                         width = abs(table_coord[close_table_index][0] - table_coord[close_table_index][2])
+                        # get detected table height
                         height = abs(table_coord[close_table_index][1] - table_coord[close_table_index][3])
-                        for x in range(X[i], table_coord[close_table_index][0]):
+                         # count black pixels in left area of table
+                        for x in range(table_coord[close_table_index][0], X[i]):
                             for y in range(table_coord[close_table_index][1], table_coord[close_table_index][3]):
                                 if(bw.getpixel((x, y)) == 0):
                                     b1 += 1
-
-                        for x in range(X_1[i], table_coord[close_table_index][2]):
+                       # count black pixels in right area of table
+                        for x in range(table_coord[close_table_index][2], X_1[i]):
                             for y in range(table_coord[close_table_index][1], table_coord[close_table_index][3]):
                                 if(bw.getpixel((x, y)) == 0):
                                     b2 += 1
-
-                        for x in range(Y[i], table_coord[close_table_index][1]):
+                        # count black pixels in upper area of table
+                        for x in range(table_coord[close_table_index][1], Y[i]):
                             for y in range(table_coord[close_table_index][0], table_coord[close_table_index][2]):
                                 if(bw.getpixel((y, x)) == 0):
                                     b3 += 1
-
-                        for x in range(Y_1[i], table_coord[close_table_index][3]):
+                        # count black pixels in bottom area of table
+                        for x in range(table_coord[close_table_index][3], Y_1[i]):
                             for y in range(table_coord[close_table_index][0], table_coord[close_table_index][2]):
                                 if(bw.getpixel((y, x)) == 0):
                                     b4 += 1
-
+                    # count total pixel
                     total_black_pixels = b1 + b2 + b3 + b4
-
+                    
+                    # if black pixels equal to height or width in all boundries then its a line so check will be zero
                     if(b1 == height and b2 == height and b3 == width and b4 == width):
                         check = 0
+                    # if black pixels equal to height in left side then its a line but all sides black pixel is 20 then check will zero
                     elif(b1 == height and b2 <= 20 and b3 <= 20 and b4 <=20 ):
                         check = 0
+                    # if black pixels equal to height in right side then its a line but all sides black pixel is 20 then check will zero
                     elif(b2 == height and b1 <= 20 and b3 <= 20 and b4 <=20 ):
                         check = 0
+                    # if black pixels equal to width in upper side then its a line but all sides black pixel is 20 then check will zero
                     elif(b3 == width and b2 <= 20 and b1 <= 20 and b4 <=20 ):
                         check = 0
+                    # if black pixels equal to width in below side then its a line but all sides black pixel is 20 then check will zero
                     elif(b4 == width and b2 <= 20 and b3 <= 20 and b1 <=20 ):
                         check = 0
+                    # if all sides black pixel is 20 then check will zero
                     elif(b1 <= 20 and b2 <= 20 and b3 <= 20 and b4 <=20 ):
                         check = 0
+                    # if all sides pixels is zero then check will zero
                     elif(total_black_pixels == 0):
                         check = 0
+                    # other wise check will be 1
                     else:
                         check = 1
-
+                    # if check is 1 then calculate accuracy by area
                     if(check == 1):
+                        # if ground truth area is greater or equal to detected then divide ground truth 
                         if(Area >= Area2):
                             accuracy = abs(float(100 - (float(abs(Area-Area2))/Area) * 100))
                         else:
                             accuracy = abs(float(100 - (float(abs(Area-Area2))/Area2) * 100))
                         a += 1
+                    # if check is zero then its mean accuracy would be 100 percent
                     else:
                         accuracy = 100
                         a += 1
-
+                    # add all accuracy one by one 
                     total_accur = accuracy + total_accur
+        # if number of gorund truth tables is greater then detected
         if(no_of_table > len(table_coord)):
+            # if detected is one
             if(len(table_coord) == 1):
                 counter = 0
                 total_Area = 0
                 dist = 0
                 dist_x = 0
+                # loop for calculate vertical or horizontal distance between 
+                # ground truth table which is lie in detected 
                 for i in range(no_of_table):
                     if(no_of_table > 1 and i < (no_of_table - 1)):
                         dist = abs(Y[i] - Y[i+1])
                         dist_x = abs(X[i+1] - X[i])
+                    # if distance is less or equal to 250 
+                    # pixels then its mean the detected table is one and correctly detected
+                    # even of tables marked in ground truth are more than one
                     if(dist <= 250 or dist_x <= 250):
+                        # count all words of these tables 
                         counter += g_c[i]
+                        # add area of these tables
                         Area = abs(( X[i] - X_1[i] ) * ( Y_1[i] - Y[i]))
                         print("check area",Area)
+                        # calculate total area of all tables 
                         total_Area = Area + total_Area
+                    else:
+                        Area = abs(( X[i] - X_1[i] ) * ( Y_1[i] - Y[i]))
+                        total_Area = Area + total_Area
+                # if number of detected words is equal to number of counter(ground truth tables which distance is less or equal to 250) words
+                # then its mean 100 percent accuracy 
                 if(t_c[0] == counter):
                     accuracy = 100
                     a += 1
                     total_accur = accuracy + total_accur
+                # other wise apply xy-cut method to calculate accuracy
                 else:
+                    # calculate area of detected table
                     Area2 = abs(( table_coord[0][2] - table_coord[0][0] ) * ( table_coord[0][3] - table_coord[0][1] ))
                     print("Area 1 : ",Area, "Area 2 : ", Area2)
                     b1 = 0
@@ -671,23 +739,32 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_ta
                     width = 0
                     height = 0
                     check = 0
+                    # if ground truth x and y position less or equal to detected x and y position 
+                    # and ground truth x_1 and y_1 position greater or equal to detected x_1 and y_1 psoition
+                    # its mean detected table is in ground truth table
                     if(X[0] < table_coord[0][0] and Y[0] < table_coord[0][1] and X_1[no_of_table-1] > table_coord[0][2] and Y_1[no_of_table-1] > table_coord[0][3]):
+                        # calculate width of detected table
                         width = abs(table_coord[0][0] - table_coord[0][2])
+                        # calculate height of detected table
                         height = abs(table_coord[0][1] - table_coord[0][3])
+                        # count black pixels in left area of table
                         for x in range(X[0], table_coord[0][0]):
                             for y in range(Y[0], Y_1[no_of_table-1]):
                                 if(bw.getpixel((x, y)) == 0):
                                     b1 += 1
-                        for x in range(X_1[no_of_table-1], table_coord[0][2]):
+                        # count black pixels in right area of table
+                        for x in range(X_1[0], table_coord[0][2]):
                             for y in range(Y[0], Y_1[no_of_table-1]):
                                 if(bw.getpixel((x, y)) == 0):
                                     b2 += 1
+                        # count black pixels in upper area of table
                         for x in range(Y[0], table_coord[0][1]):
-                            for y in range(X[0], X_1[no_of_table-1]):
+                            for y in range(X[0], X_1[0]):
                                 if(bw.getpixel((y, x)) == 0):
                                     b3 += 1
+                        # count black pixels in bottom area of table
                         for x in range(Y_1[no_of_table-1], table_coord[0][3]):
-                            for y in range(X[0], X_1[no_of_table-1]):
+                            for y in range(X[0], X_1[0]):
                                 if(bw.getpixel((y, x)) == 0):
                                     b4 += 1
                     else:
@@ -697,47 +774,60 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_ta
                         b4 = 0
                         width = abs(table_coord[0][0] - table_coord[0][2])
                         height = abs(table_coord[0][1] - table_coord[0][3])
-                        for x in range(X[0], table_coord[0][0]):
+                        for x in range(table_coord[0][0], X[0]):
                             for y in range(table_coord[0][1], table_coord[0][3]):
                                 if(bw.getpixel((x, y)) == 0):
                                     b1 += 1
 
-                        for x in range(X_1[no_of_table-1], table_coord[0][2]):
+                        for x in range(table_coord[0][2], X_1[no_of_table-1]):
                             for y in range(table_coord[0][1], table_coord[0][3]):
                                 if(bw.getpixel((x, y)) == 0):
                                     b2 += 1
 
-                        for x in range(Y[0], table_coord[0][1]):
+                        for x in range(table_coord[0][1], Y[0]):
                             for y in range(table_coord[0][0], table_coord[0][2]):
                                 if(bw.getpixel((y, x)) == 0):
                                     b3 += 1
 
-                        for x in range(Y_1[no_of_table-1], table_coord[0][3]):
+                        for x in range(table_coord[0][3], Y_1[no_of_table-1]):
                             for y in range(table_coord[0][0], table_coord[0][2]):
                                 if(bw.getpixel((y, x)) == 0):
                                     b4 += 1
 
                     total_black_pixels = b1 + b2 + b3 + b4
-
+                     # if black pixels equal to height or width in all
+                     #  boundries then its a line so check will be zero
                     if(b1 == height and b2 == height and b3 == width and b4 == width):
                         check = 0
+                    # if black pixels equal to height in left side then its a line
+                    #  but all sides black pixel is 20 then check will zero
                     elif(b1 == height and b2 <= 20 and b3 <= 20 and b4 <=20 ):
-                        check = 0   
+                        check = 0  
+                    # if black pixels equal to height in right side then its
+                    #  a line but all sides black pixel is 20 then check will zero
                     elif(b2 == height and b1 <= 20 and b3 <= 20 and b4 <=20 ):
                         check = 0
+                    # if black pixels equal to width in upper side then its a
+                    #  line but all sides black pixel is 20 then check will zero
                     elif(b3 == width and b2 <= 20 and b1 <= 20 and b4 <=20 ):
                         check = 0
+                    # if black pixels equal to width in lower side then its a line
+                    #  but all sides black pixel is 20 then check will zero
                     elif(b4 == width and b2 <= 20 and b3 <= 20 and b1 <=20 ):
                         check = 0
+                    # if all sides black pixel is 20 then check will zero
                     elif(b1 <= 20 and b2 <= 20 and b3 <= 20 and b4 <=20 ):
                         check = 0
+                    # if all sides pixels is zero then check will zero
                     elif(total_black_pixels == 0):
                         check = 0
                     else:
                         check = 1
 
                     if(check == 1):
-                        if(Area >= total_Area):
+                        # if total Area of ground truth tables which is in detected
+                        #  one is greater or equal to detected area than divide ground truth area
+                        if(total_Area >= Area2):
                             accuracy = abs(float(100 - (float(abs(total_Area-Area2))/total_Area) * 100))
                         else:
                             accuracy = abs(float(100 - (float(abs(total_Area-Area2))/Area2) * 100))
@@ -747,19 +837,32 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_ta
                         a += 1
 
                     total_accur = accuracy + total_accur
-            else:        
+            # if detected table is greater than one 
+            else:  
+                # array to store the distance from every detected table
+                # to check the close table with ground truth table
                 table_difference = []
+                 # loop to calculate the difference and append to array of table_difference
                 for i in range(len(table_coord)):
                     for j in range(no_of_table):
                         table_difference.append(abs(Y[j] - table_coord[i][1]))
+                     # getting the index of close table by getting the index of minimum difference value
                     close_table_index = min(xrange(len(table_difference)), key=table_difference.__getitem__)
                     table_difference = []
+                    # if number of gorund truth words is equal to number of detected words 
+                    # then accuracy is 100 percent
                     if(g_c[close_table_index] == t_c[i]):
                         accuracy = 100
+                        # store total accuracy
                         total_accur = accuracy + total_accur
+                        # count table for mean accuracy
                         a += 1
+                    # if number of gorund truth words is not equal to number of detected words
+                    # then apply xy-cut in else
                     else:
+                         # calculate area of ground truth which is near to detected
                         Area = abs(( X[close_table_index] - X_1[close_table_index] ) * ( Y_1[close_table_index] - Y[close_table_index]))
+                        # calculate area of detected 
                         Area2 = abs(( table_coord[i][2] - table_coord[i][0] ) * ( table_coord[i][3] - table_coord[i][1] ))
                         print("Area 1 : ",Area, "Area 2 : ", Area2)
                         b1 = 0
@@ -770,21 +873,30 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_ta
                         width = 0
                         height = 0
                         check = 0
+                        # if ground truth x and y position less or equal to detected x and y position 
+                        # and ground truth x_1 and y_1 position greater or equal to detected x_1 and y_1 psoition
+                        # its mean detected table is in ground truth table
                         if(X[close_table_index] < table_coord[i][0] and Y[close_table_index] < table_coord[i][1] and X_1[close_table_index] > table_coord[i][2] and Y_1[close_table_index] > table_coord[i][3]):
+                            # get gorund truth table width
                             width = abs(X[close_table_index] - X_1[close_table_index])
+                            # get gorund truth table height
                             height = abs(Y_1[close_table_index] - Y[close_table_index])
+                            # count black pixels in left area of table
                             for x in range(X[close_table_index], table_coord[i][0]):
                                 for y in range(Y[close_table_index], Y_1[close_table_index]):
                                     if(bw.getpixel((x, y)) == 0):
                                         b1 += 1
+                             # count black pixels in right area of table
                             for x in range(X_1[close_table_index], table_coord[i][2]):
                                 for y in range(Y[close_table_index], Y_1[close_table_index]):
                                     if(bw.getpixel((x, y)) == 0):
                                         b2 += 1
+                            # count black pixels in upper area of table
                             for x in range(Y[close_table_index], table_coord[i][1]):
                                 for y in range(X[close_table_index], X_1[close_table_index]):
                                     if(bw.getpixel((y, x)) == 0):
                                         b3 += 1
+                            # count black pixels in bottom area of table
                             for x in range(Y_1[close_table_index], table_coord[i][3]):
                                 for y in range(X[close_table_index], X_1[close_table_index]):
                                     if(bw.getpixel((y, x)) == 0):
@@ -794,62 +906,74 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_ta
                             b2 = 0
                             b3 = 0
                             b4 = 0
+                            # get detected table width
                             width = abs(table_coord[i][0] - table_coord[i][2])
+                            # get detected table height
                             height = abs(table_coord[i][1] - table_coord[i][3])
-                            for x in range(X[close_table_index], table_coord[i][0]):
+                            # count black pixels in left area of table
+                            for x in range(table_coord[i][0], X[close_table_index]):
                                 for y in range(table_coord[i][1], table_coord[i][3]):
                                     if(bw.getpixel((x, y)) == 0):
                                         b1 += 1
-
-                            for x in range(X_1[close_table_index], table_coord[i][2]):
+                            # count black pixels in right area of table
+                            for x in range(table_coord[i][2], X_1[close_table_index]):
                                 for y in range(table_coord[i][1], table_coord[i][3]):
                                     if(bw.getpixel((x, y)) == 0):
                                         b2 += 1
-
-                            for x in range(Y[close_table_index], table_coord[i][1]):
+                            # count black pixels in upper area of table
+                            for x in range(table_coord[i][1], Y[close_table_index]):
                                 for y in range(table_coord[i][0], table_coord[i][2]):
                                     if(bw.getpixel((y, x)) == 0):
                                         b3 += 1
-
-                            for x in range(Y_1[close_table_index], table_coord[i][3]):
+                            # count black pixels in bottom area of table
+                            for x in range(table_coord[i][3], Y_1[close_table_index]):
                                 for y in range(table_coord[i][0], table_coord[i][2]):
                                     if(bw.getpixel((y, x)) == 0):
                                         b4 += 1
-
+                        # count total pixel
                         total_black_pixels = b1 + b2 + b3 + b4
-
+                        # if black pixels equal to height or width in all boundries then its a line so check will be zero
                         if(b1 == height and b2 == height and b3 == width and b4 == width):
                             check = 0
+                        # if black pixels equal to height in left side then its a line but all sides black pixel is 20 then check will zero
                         elif(b1 == height and b2 <= 20 and b3 <= 20 and b4 <=20 ):
-                            check = 0   
+                            check = 0 
+                        # if black pixels equal to height in right side then its a line but all sides black pixel is 20 then check will zero
                         elif(b2 == height and b1 <= 20 and b3 <= 20 and b4 <=20 ):
                             check = 0
+                        # if black pixels equal to height in right side then its a line but all sides black pixel is 20 then check will zero
                         elif(b3 == width and b2 <= 20 and b1 <= 20 and b4 <=20 ):
                             check = 0
+                        # if black pixels equal to width in below side then its a line but all sides black pixel is 20 then check will zero
                         elif(b4 == width and b2 <= 20 and b3 <= 20 and b1 <=20 ):
                             check = 0
+                        # if all sides black pixel is 20 then check will zero
                         elif(b1 <= 20 and b2 <= 20 and b3 <= 20 and b4 <=20 ):
                             check = 0
+                        # if all sides pixels is zero then check will zero
                         elif(total_black_pixels == 0):
                             check = 0
                         else:
                             check = 1
-
+                        # if check is 1 then calculate accuracy by area
                         if(check == 1):
+                            # if ground truth area is greater or equal to detected then divide ground truth
                             if(Area > Area2):
                                 accuracy = abs(float(100 - (float(abs(Area-Area2))/Area) * 100))
                             else:
                                 accuracy = abs(float(100 - (float(abs(Area-Area2))/Area2) * 100))
                             a += 1
+                        # if check is zero then its mean accuracy would be 100 percent
                         else:
                             accuracy = 100 
                             a += 1
 
                         total_accur = accuracy + total_accur           
 
-  
+   # calculate mean accuracy 
     mean_accuracy = total_accur / a
     print("accuracy", mean_accuracy)
+    # write accuracy in file
     file.write("\r\n" + str(mean_accuracy) + "%" + "," + "accurate")
     file.close()
 ############## End of Function ###############################################################
