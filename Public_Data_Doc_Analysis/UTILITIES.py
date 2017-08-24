@@ -396,98 +396,166 @@ def calc_y_cut (img , coord, file_path):
 
 ##############################################################################################
 # Calculate Accuracy 
-def cal_accuracy(coords, g_x, g_x_1, g_y, g_y_1, arr, no_of_table, file_path,write_path,filename):
+def cal_accuracy(coords, g_x, g_x_1, g_y, g_y_1, arr, no_of_table, file_path):
+    # check no_of_table(ground truth tables) greater than 1 while detected is zero or
+    #  ground truth is zero while detected greater than 1 accuracy is zero
     if((no_of_table >= 1 and len(coords) == 0) or (no_of_table == 0 and len(coords) >= 1)):
         print(" accuracy : ", 0)
         file = open(file_path, 'wb')
         file.write(str(0))
         file.close()
         return
+    #  check ground truth table is zero and detected is also zero then accuracy is 100 percent
     if(no_of_table ==  0 and len(coords) == 0):
         print(" accuracy : ", 100)
         file = open(file_path, 'wb')
         file.write(str(100))
         file.close()
         return
+     # array to store the number of words in ground truth tables
     g_c = []
+    # array to store the number of words in detected tables
     t_c = []
+     # counter for words
     c = 0
+    # count number of words of ground truth tables
     for i in range(no_of_table):
         for j in range(len(arr)):
+            # if word x position greater or equal ground truth table x position and less or equal ground truth x_1 position
+            # and word y position greater or equal ground truth table y position and less or equal ground truth y_1 position
+            # then the word exist in this table 
             if(arr[j].x >= g_x[i] and arr[j].y >= g_y[i] and arr[j].x <= g_x_1[i] and arr[j].y <= g_y_1[i]):
                 c += 1
+        # append each words counter in array
         g_c.append(c)
         c = 0
     c = 0
+    # count number of words of detected tables
     for i in range(len(coords)):
+        # get single table
         t_coords = coords[i]
         for j in range(len(arr)):
+            # if word x position greater or equal detected table x position and less or equal detected x_1 position
+            # and word y position greater or equal detected table y position and less or equal detected y_1 position
+            # then the word exist in this table
             if(arr[j].x >= t_coords[0] and arr[j].y >= t_coords[1] and arr[j].x <= t_coords[2] and arr[j].y <= t_coords[3]):
                 c += 1
         t_c.append(c)
         c = 0
     accuracy = []
-    
+    # if ground truth tables and also detected tables greater than 1
     if(no_of_table > 1 and len(coords) > 1):
+         # if ground truth tables is less than detected
         if(no_of_table <= len(coords)):
+            # array to store the distance from every detected table
+            # to check the close table with ground truth table
             table_difference = []
+            # loop for calculate the difference and append to array of table_difference
             for i in range(no_of_table):
                 for j in range(len(coords)):
                     table_difference.append(abs(g_y[i] - coords[j][1]))
+                # getting the index of close table by getting the index of minimum difference value
                 close_table_index = min(xrange(len(table_difference)), key=table_difference.__getitem__)
                 table_difference = []
+                # if number of ground truth table words is greater or 
+                # equal to number of detected table words then 
+                # we subtract detected words from ground truth table words 
+                # and divide ground truth table words 
                 if(g_c[i] >= t_c[close_table_index]):
                     accr = abs(100 - (float(float(abs(g_c[i] - t_c[close_table_index])) / g_c[i]) * 100))
                     accuracy.append(accr)
+                # if number of ground truth table words is less or 
+                # equal to number of detected table words then 
+                # we subtract ground truth table words from detected table words 
+                # and divide detected table words
                 elif(g_c[i] <= t_c[close_table_index]):
                     accr = abs(100 - (float(float(abs(t_c[close_table_index] - g_c[i] )) / t_c[close_table_index]) * 100))
                     accuracy.append(accr)
+        # if number of gorund truth tables is greater then detected
         if(no_of_table > len(coords)):
+            # array to store the distance from every detected table
+            # to check the close table with ground truth table
             table_difference = []
+            # loop to calculate the difference and append to array of table_difference
             for i in range(len(coords)):
                 for j in range(no_of_table):
                     table_difference.append(abs(g_y[j] - coords[i][1]))
+                # getting the index of close table by getting the index of minimum difference value
                 close_table_index = min(xrange(len(table_difference)), key=table_difference.__getitem__)
                 table_difference = []
+                # if number of ground truth table words is less or 
+                # equal to number of detected table words then 
+                # we subtract ground truth table words from detected table words 
+                # and divide detected table words
                 if(t_c[i] >= g_c[close_table_index]):
                     accr = abs(100 - (float(float(abs(t_c[i] - g_c[close_table_index])) / t_c[i]) * 100))
                     accuracy.append(accr)
+                # if number of ground truth table words is greater or 
+                # equal to number of detected table words then 
+                # we subtract detected words from ground truth table words 
+                # and divide ground truth table words
                 elif(t_c[i] <= g_c[close_table_index]):
                     accr = abs(100 - (float(float(abs(g_c[close_table_index] - t_c[i] )) / g_c[close_table_index]) * 100))
                     accuracy.append(accr)
-
+    # if ground truth and detected table is equal to one
     else:
+        # if number of ground truth table words is greater or 
+        # equal to number of detected table words then 
+        # we subtract detected words from ground truth table words 
+        # and divide ground truth table words
         if(g_c[0] >= t_c[0]):
             accr = abs(100 - (float(float(abs(g_c[0] - t_c[0])) / g_c[0]) * 100))
             accuracy.append(accr)
+        # if number of ground truth table words is less or 
+        # equal to number of detected table words then 
+        # we subtract ground truth table words from detected table words 
+        # and divide detected table words
         elif(g_c[0] <= t_c[0]):
             accr = abs(100 - (float(float(abs(t_c[0] - g_c[0] )) / t_c[0]) * 100))
             accuracy.append(accr)
     sum = 0
+    # add all tables accuracy
     for i in range(len(accuracy)):
         sum += accuracy[i]
+    # calculate mean accuracy 
     mean_accuracy = sum / len(accuracy)
+    # if ground truth tables is greater than detected
     if(no_of_table > len(coords)):
+        # if detected is one 
         if(len(coords) == 1):
                 counter = 0
                 dist = 0
                 dist_x = 0
+                # loop for calculate vertical or horizontal distance between 
+                # ground truth table which is lie in detected
                 for i in range(no_of_table):
                     if(no_of_table > 1 and i < (no_of_table - 1)):
                         dist = abs(g_y_1[i] - g_y[i+1])
                         dist_x = abs(g_x[i+1] - g_x_1[i])
+                    # if distance is less or equal to 250 
+                    # pixels then its mean the detected table is one and correctly detected
+                    # even of tables marked in ground truth are more than one
                     if(dist <= 250 or dist_x <= 250):
+                        # count all words of these tables 
                         counter += g_c[i]
+                # if counter words is greater than detected 
+                # then divide counter 
                 if(counter > t_c[0]):
                     mean_accuracy = abs(100 - (float(float(abs(counter - t_c[0])) / counter) * 100))
                 else:
                     mean_accuracy = abs(100 - (float(float(abs(counter - t_c[0])) / t_c[0]) * 100))
+        # if detected table is not equal to one 
+        # but gorund truth table is greater than detected
+        # its mean some tables is not detect
+        #  then we subtract
         else:
             mean_accuracy = abs(mean_accuracy - ((no_of_table - len(coords)) * float(100 / no_of_table)))
     elif(no_of_table < len(coords)):
         mean_accuracy = abs(mean_accuracy - ((len(coords) - no_of_table)) * float(100 / len(coords)))
     print(" accuracy : ", mean_accuracy)
+    # file open
     file = open(file_path, 'wb')
+    # write accuracy in file
     file.write(str(mean_accuracy))
     file.close()
     ############## End of Function ###############################################################
@@ -563,7 +631,7 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_ta
             # array to store the distance from every detected table
             # to check the close table with ground truth table
             table_difference = []
-            # loop to calculate the difference and append to array of table_difference
+            # loop for calculate the difference and append to array of table_difference
             for i in range(no_of_table):
                 for j in range(len(table_coord)):
                     table_difference.append(abs(Y[i] - table_coord[j][1]))
@@ -978,7 +1046,109 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_ta
     file.close()
 ############## End of Function ###############################################################
 
+################ extract tables #################################
+def extract_table_wordss(write_path, name_of_file, d_coords, arr):
+    # array for store x values of words 
+    ar = []
+    # left margin for first minimum x position of word
+    left = 30
+    # store the value of y position for every word to
+    # compare and bring the every word on the top of the page
+    y = 0
+    # top margin of table words
+    top = 40
+    # store y differnce between two words 
+    t = 0
+    # used for store previous difference 
+    # so that we add in next y differnce
+    a = 0
+    # store x differnce between two words
+    l = 0
+    # used for margin of next table from previous table
+    p = 0
+    # used for margin of next table from previous table
+    s = 0
+    # used for store preivous table top value
+    r = 0
+    # used for store minimum value of x position of word
+    min_value = 0
+    # open file
+    file = open(write_path + "\\html\\" + name_of_file + "_table_words.html", "wb")
+    file.write("<html>\r\n<style>")
+    # loop used for write styles of table in html file
+    for x in range(len(d_coords)):
+    	
+    	coordss = d_coords[x]
+    	file.write("\r\n#t"+ str(x) + "{\r\n border:2px solid black;\r\nwidth:" + 
+        str(abs(coordss[2]-coordss[0]) + 50) + "px;\r\nheight:" + str(abs(coordss[3]-coordss[1]) + 50) +
+        'px;\r\nmargin-top:20;}')    
+    file.write("\r\n</style>\r\n<body>\r\n")
+    # loop for handling of multiple tables
+    for z in range(len(d_coords)):
+        # start set top value 
+        top = 40
+        a = 0
+        bool = 0
+        ar = []
+        top = top + s
+        r = top
+        coords = d_coords[z]
+        # loop for store all x position of words of table
+        for i in range(len(arr)):
+            if(arr[i].x >= coords[0] and arr[i].y >= coords[1] and arr[i].x <= coords[2] and arr[i].y <= coords[3]):
+                ar.append(arr[i].x)
+                
+        
+        file.write('<table id = "t' + str(z) + '">\r\n<tr>\r\n')
+        # previous y position of every table should be change 
+        # so we initialize zero for every table
+        previous_word_y = 0
+        # store minimum value of x position of word
+        min_value = min(ar)
+        # loop for write words in file
+        for i in range(len(arr)):
+            # check which word is part of table 
+            if(arr[i].x >= coords[0] and arr[i].y >= coords[1] and arr[i].x <= coords[2] and arr[i].y <= coords[3]):
+                # get previous y position of first word of table
+                # then bool set 1
+                if(bool == 0):
+                    previous_word_y = arr[i].y
+                    bool = 1
+                # when y position of word will not match with previous y position
+                # its mean start of new row of table
+                if(arr[i].y != previous_word_y):
+                    # then we set top of next row to find differnce between previous row 
+                    # and next row through subtract previous from next row y value
+                    top = r
+                    t = abs(arr[i].y - y)
+                    a = t + a
+                    top = top + a 
+                    file.write ('\r\n</tr>\r\n<tr>\r\n')
+                    # again previous position set for next row 
+                    previous_word_y = arr[i].y
+                y = arr[i].y
+                # set margin of left side if x position of word 
+                # is equal to min value its mean word is most left side 
+                # set left margin 30
+                if(arr[i].x == min_value):
+                    left = 30
+                # otherwise we subtract minimum value from x position of next word
+                # so that we can set left margin of next word 
+                else:
+                    left = 30
+                    l = abs(arr[i].x - min_value)
+                    left = left + l
+                # write word in file 
+                file.write ('<td style= "position:absolute; left:' + str(left) + '; top:'+ str(top) + '">' + str(arr[i].word) + "</td> \r\n")
+        file.write("</tr>\r\n</table>\r\n")
+        # used for margin of next table from previous table
+        p = abs(coords[3]-coords[1]) + 50
+        s = s + p + 20
+    file.write("\r\n</body>\r\n </html>")
+    file.close()
+        
 
+################## End of Function ####################################
 
 
 

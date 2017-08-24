@@ -10,6 +10,7 @@ import WekaMachineLearning as WML
 import PostProcessor as PP
 import StructureIdentification as Struct_I
 import CellDrawing as CD 
+
 import UTILITIES as UT
 import os
 import ntpath
@@ -102,24 +103,14 @@ def main(table, img, ocr, name_of_file, arff, out_img, write_path, model_file):
     #im.save(write_path + "\\" + name_of_file + "_accuracy.png")
     #file.close()
 
-    ## drawing detected table
-    #draw_image.rectangle(final_table, fill = None, outline = (255, 0 , 0))
-    #coord = final_table
-    #Area2 = (( coord[0] - coord[2] ) * ( coord[1] - coord[3] )) 
-    ##file.write ('Detected' + ',' + str(coord[0]) + ',' + str(coord[1]) + ',' + str(coord[2]) 
-    ##    + ',' + str(coord[3]) + ',' + str(Area2) + '\r\n')
-    #im.save(write_path + "\\" + name_of_file + "_accuracy.png")
-    ##file.close()
-
      #call to function of calculating Y cut
     #ar = UT.calc_y_cut(img, final_table, write_path + "\\" + name_of_file + "_column.png")
     
-    #UT.calc_accuracy(X, X_1, Y, Y_1, final_table, img, write_path, name_of_file, no_of_table)
     
     # Extracting words of detected table region and writing them to csv
-   # UT.extract_table_words(write_path,name_of_file,final_table,arr_of_objects)
+    UT.extract_table_wordss(write_path,name_of_file,final_table,arr_of_objects)
     # cal cal_accuracy function
-   # UT.cal_accuracy(final_table, X, X_1, Y, Y_1, arr_of_objects, no_of_table, write_path + "\\" + name_of_file + "_Accuracy.csv",write_path,name_of_file)
+   # UT.cal_accuracy(final_table, X, X_1, Y, Y_1, arr_of_objects, no_of_table, write_path + "\\" + name_of_file + "_Accuracy.csv")
     # Call confusion matrix 
     #UT.confusion_matrix(X,X_1,Y,Y_1,final_table,img,write_path,name_of_file,no_of_table,arr_of_objects)
     # cal cal_accuracy function
