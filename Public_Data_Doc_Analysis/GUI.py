@@ -310,6 +310,8 @@ class Ui_MainWindow(object):
                 self.progressBar.setValue(progress) 
             setup.setup_main(self.file_path, self.file_name, self.write_path,self.model_file)
             self.progressBar.setValue(100)
+            path = self.write_path+"\\" + self.file_name + "_table.png"
+            self.labelOutputImage.setPixmap(QtGui.QPixmap(path).scaled(self.labelOutputImage.width(), self.labelOutputImage.height(),QtCore.Qt.KeepAspectRatio))
             print("Completed")
             #jvm.stop()
         else:

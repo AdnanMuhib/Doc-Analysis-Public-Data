@@ -167,6 +167,7 @@ class StructureIdentification(object):
         for i in range(0, len(x_0)):
             for j in range(0, 4):
                 draw.rectangle([x_0[i] + j, y_0[i] + j, x_1[i] + width_1[i] + j, y_1[i] + height_1[i] + j], outline="red")
+                pass
             print("Detected Table ", i+1," x_0 , y_0, x_1, y_1: ", x_0[i], y_0[i], x_1[i] + width_1[i], y_1[i] + height_1[i])
             table_coord.append([])
             table_coord[no].append(x_0[i])

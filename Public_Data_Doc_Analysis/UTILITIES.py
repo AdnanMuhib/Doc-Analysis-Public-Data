@@ -276,13 +276,10 @@ def remove_wrong_table(table_coords):
                         new_table_coords.append(new_table)
                         #table_distances.append(dist)
                     else:
-                        new_table_coords.append(table)
-                        
+                        new_table_coords.append(table)                      
     for i in range(k,len(table_coords)):
         tables = table_coords[i]
         new_table_coords.append(tables)
-
-      
     if(flag == False):
         for i in range(len(table_coords)):
             tab = table_coords[i]
@@ -291,6 +288,7 @@ def remove_wrong_table(table_coords):
             table_coords[i] = tab
         return table_coords, flag
     return new_table_coords, flag
+
 ############## End of Function ###############################################################
 
 ############ Extract Table Words through Html ######################
@@ -395,8 +393,8 @@ def calc_y_cut (img , coord, file_path):
 
 
 ##############################################################################################
-# Calculate Accuracy 
-def cal_accuracy(coords, g_x, g_x_1, g_y, g_y_1, arr, no_of_table, file_path):
+# Calculate Accuracy by Counting Wordsin Ground truth tables and in Detected tables
+def cal_accuracy_words(coords, g_x, g_x_1, g_y, g_y_1, arr, no_of_table, file_path):
     # check no_of_table(ground truth tables) greater than 1 while detected is zero or
     #  ground truth is zero while detected greater than 1 accuracy is zero
     if((no_of_table >= 1 and len(coords) == 0) or (no_of_table == 0 and len(coords) >= 1)):
@@ -558,11 +556,13 @@ def cal_accuracy(coords, g_x, g_x_1, g_y, g_y_1, arr, no_of_table, file_path):
     # write accuracy in file
     file.write(str(mean_accuracy))
     file.close()
-    ############## End of Function ###############################################################
+    print("\nWords Accuracy Computed.....\n")
+############## End of Function ###############################################################
 
-############## cal accuracy ######################################################################
+##############################################################################################
+######calculating accuracy by checking the pixels in intesecting areas of tables 
 
-def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_table,arr):
+def calc_accuracy_pixels(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_table,arr):
     # open image from img path
     Img  = Image.open(img)
     # image change in gray image
@@ -570,7 +570,7 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_ta
     # gray image change in black and white image
     bw = gray_img.point(lambda x: 0 if x < 128 else 255, '1')
     # file open where accuracy write
-    file = open( path + "\\csv\\" + name_of_file + "_table_accur.csv", "wb")
+    file = open( path + "\\Pixels_Accuracy\\" + name_of_file + "_accuracy_pixels.csv", "wb")
     accuracy = 0
     a = 0
     mean_accuracy = 0
@@ -579,14 +579,14 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_ta
     #  ground truth is zero while detected greater than 1 accuracy is zero
     if((no_of_table >= 1 and len(table_coord) == 0) or (no_of_table == 0 and len(table_coord) >= 1)):
         print(" accuracy : ", 0)
-        file = open(path + "\\csv\\" + name_of_file + "_table_accur.csv", "wb")
+        file = open(path + "\\Pixels_Accuracy\\" + name_of_file + "_accuracy_pixels.csv", "wb")
         file.write(str(0))
         file.close()
         return
     #  check ground truth table is zero and detected is also zero then accuracy is 100 percent 
     if(no_of_table ==  0 and len(table_coord) == 0):
         print(" accuracy : ", 100)
-        file = open(path + "\\csv\\" + name_of_file + "_table_accur.csv", "wb")
+        file = open(path + "\\Pixels_Accuracy\\" + name_of_file + "_accuracy_pixels.csv", "wb")
         file.write(str(100))
         file.close()
         return
@@ -1044,8 +1044,10 @@ def calc_accuracy(X, X_1, Y, Y_1, table_coord, img, path, name_of_file, no_of_ta
     # write accuracy in file
     file.write("\r\n" + str(mean_accuracy) + "%" + "," + "accurate")
     file.close()
+    print("\nPixels Accuracy Computed.....\n")
 ############## End of Function ###############################################################
 
+##############################################################################################
 ################ extract tables #################################
 def extract_table_wordss(write_path, name_of_file, d_coords, arr):
     # array for store x values of words 
@@ -1146,8 +1148,6 @@ def extract_table_wordss(write_path, name_of_file, d_coords, arr):
         s = s + p + 20
     file.write("\r\n</body>\r\n </html>")
     file.close()
-        
-
 ################## End of Function ####################################
 
 
