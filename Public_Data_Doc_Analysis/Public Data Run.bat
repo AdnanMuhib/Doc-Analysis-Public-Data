@@ -1,2 +1,2 @@
-python GUI.py
+python setup.py
 pause()

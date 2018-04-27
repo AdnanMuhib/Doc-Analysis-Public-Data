@@ -47,6 +47,15 @@ def main(table, img, ocr, name_of_file, arff, out_img, write_path, model_file):
                                                                       word_Y, word_Width,
                                                                       word_Height, words, 
                                                                       X, Y, X_1, Y_1)
+    ################## Write the Ground truth from XML to CSV Files #############################
+    #ground_truth_csv_path = 'C:\\Users\\Abdullah_A\\Desktop\\GroundTruth PublicBulk\\'
+    #ground_truth_csv_path += name_of_file + '.csv'
+    #csv_file = open(ground_truth_csv_path,'wb')
+    #for i  in range(no_of_table):
+    #    csv_file.write(str(X[i]) + "," + str(Y[i]) + "," + str(X_1[i]) + "," + str(Y_1[i]) + "\n")
+    #csv_file.close()
+    ########## End of Writing ###################################################################
+
     # Sorting an array because initially its not in order
     sorted_array_y = feature_extractor.sort_array(arr_of_objects)
     # There is a difference in different words vertically in a line.  So
